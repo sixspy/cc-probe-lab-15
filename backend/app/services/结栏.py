@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import uuid
 from collections import defaultdict
-from app.db import 连接
+from app.db import 连接, 写事务
 from app.seed import 此刻
 from app.services import 目录
 
@@ -12,8 +12,8 @@ def 结当前栏() -> dict:
     规 = 目录.栏规()
     栏号 = 规.get("当前栏号", "B-demo")
     批 = f"结栏-{uuid.uuid4().hex[:8]}"
-    conn = 连接()
-    try:
+    # 与装载同锁纪律：结栏期间并发装载的溢出裁决在锁外等待，不产生双态
+    with 写事务() as conn:
         rows = conn.execute(
             "SELECT * FROM 入栏缓冲 WHERE 栏号=? AND 命运='在栏'", (栏号,)
         ).fetchall()
@@ -60,10 +60,7 @@ def 结当前栏() -> dict:
             """INSERT INTO 结栏批次(编号,栏号,时刻,汇总数,报告) VALUES (?,?,?,?,?)""",
             (批, 栏号, 时刻, 汇总, json.dumps(报告, ensure_ascii=False)),
         )
-        conn.commit()
         return 报告
-    finally:
-        conn.close()
 
 
 def 预览结栏() -> dict:

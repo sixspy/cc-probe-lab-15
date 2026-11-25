@@ -10,7 +10,7 @@ export const STAGE = {
   verify: "贯验：已汇总缓冲报文数须等于汇总账报文数之和",
 };
 export function fateChip(fate) {
-  const map = {"已入栏":"ok","在栏":"ok","已汇总":"ok","已坏点":"warn","撕裂":"danger","对齐":"ok"};
+  const map = {"已入栏":"ok","在栏":"ok","已汇总":"ok","已坏点":"warn","已溢出":"warn","撕裂":"danger","对齐":"ok"};
   return { text: fate, tone: map[fate] || "" };
 }
 export function summarizeLoad(r) {
@@ -23,7 +23,7 @@ export function summarizeClose(r) {
 }
 export function summarizeVerify(r) {
   if (!r) return "";
-  return `${r["是否对齐"]?"对齐":"撕裂"} · 在栏 ${r["在栏"]} · 汇总报文 ${r["汇总报文"]} · 坏点 ${r["坏点"]}`;
+  return `${r["是否对齐"]?"对齐":"撕裂"} · 在栏 ${r["在栏"]} · 汇总报文 ${r["汇总报文"]} · 坏点 ${r["坏点"]} · 溢出 ${r["溢出"] ?? 0}`;
 }
 export function assertBoneCopy() {
   return "去皮：质控门槛入栏管道。勿做成告警大屏，勿抄潮切窗号或对拍左右轨。";
@@ -73,7 +73,7 @@ export function boneDiffersFromTide() {
 }
 
 export function verifyColumns() {
-  return ["时刻", "在栏笔数", "汇总报文数", "坏点笔数", "是否对齐", "说明"];
+  return ["时刻", "在栏笔数", "汇总报文数", "坏点笔数", "溢出数", "是否对齐", "说明"];
 }
 export function alignTone(ok) {
   return ok ? "ok" : "warn";

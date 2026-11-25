@@ -69,12 +69,18 @@ def 校验栏规补丁(体: dict) -> list[str]:
     if not isinstance(体, dict):
         return ["栏规补丁须为对象"]
     错: list[str] = []
-    for k in ("PM25上限", "PM25下限", "标定偏移上限"):
-        if k in 体:
+    for k in ("PM25上限", "PM25下限", "标定偏移上限", "入栏容限"):
+        if k in 体 and 体[k] != "":
             try:
                 float(体[k])
             except Exception:
                 错.append(f"{k}非数值")
+    if "入栏容限" in 体 and 体["入栏容限"] != "":
+        try:
+            if float(体["入栏容限"]) <= 0:
+                错.append("入栏容限须为正数")
+        except Exception:
+            pass
     if "PM25上限" in 体 and "PM25下限" in 体:
         try:
             if float(体["PM25下限"]) > float(体["PM25上限"]):

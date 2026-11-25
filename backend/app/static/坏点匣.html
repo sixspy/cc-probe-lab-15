@@ -16,11 +16,22 @@
     <div class="门槛条" id="门槛条"></div>
     <header class="顶牌" style="margin-bottom:10px">
       <h1 style="font-size:22px">坏点匣</h1>
-      <div class="骨">未过质控门槛的报文旁路。</div>
+      <div class="骨">未过质控门槛的报文旁路。注意与溢出归档区分：坏点是门槛未过；溢出是过门槛但超入栏容限，切流进只读归档。</div>
     </header>
 
     <section class="卷">
+      <h2>入栏溢出策略 · 旁路水位</h2>
+      <div id="溢出条" class="下距12"></div>
+    </section>
+
+    <section class="卷">
+      <h2>坏点匣（门槛未过）</h2>
       <div class="表绕"><table><thead><tr><th>编号</th><th>报文编号</th><th>站点</th><th>原因</th><th>读数</th><th>观测时</th></tr></thead><tbody id="表"></tbody></table></div>
+    </section>
+
+    <section class="卷">
+      <h2>溢出归档详情（过门槛 · 超容切流 · 只读 · 不回刷）</h2>
+      <div class="表绕"><table><thead><tr><th>报文编号</th><th>站点</th><th>指标</th><th>读数</th><th>观测时</th><th>原因</th><th>溢出指纹</th></tr></thead><tbody id="溢出表"></tbody></table></div>
     </section>
     <script>
     (async () => {
@@ -31,6 +42,8 @@
         tb.appendChild(探栏.行(`<td>${r.编号}</td><td>${探栏.安全文本(r.报文编号)}</td><td>${探栏.安全文本(r.站点键)}</td><td>${探栏.徽章(r.原因,"警")}</td><td>${r.读数}</td><td>${探栏.安全文本(r.观测时)}</td>`));
       }
     })();
+    探栏.渲染溢出条(document.getElementById("溢出条"));
+    探栏.渲染溢出归档表(document.getElementById("溢出表"), "溢出归档为空。超容点才会切流到此，与坏点匣互不相混。");
     </script>
 
   </div>

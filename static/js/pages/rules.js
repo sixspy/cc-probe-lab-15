@@ -10,12 +10,12 @@ export const STAGE = {
   verify: "贯验：已汇总缓冲报文数须等于汇总账报文数之和",
 };
 export function fateChip(fate) {
-  const map = {"已入栏":"ok","在栏":"ok","已汇总":"ok","已坏点":"warn","撕裂":"danger","对齐":"ok"};
+  const map = {"已入栏":"ok","在栏":"ok","已汇总":"ok","已坏点":"warn","已溢出":"warn","撕裂":"danger","对齐":"ok"};
   return { text: fate, tone: map[fate] || "" };
 }
 export function summarizeLoad(r) {
   if (!r) return "";
-  return `入流 ${r["入流"]||0} · 入栏 ${r["入栏"]||0} · 坏点 ${r["坏点"]||0} · 驳回 ${r["驳回"]||0}`;
+  return `入流 ${r["入流"]||0} · 入栏 ${r["入栏"]||0} · 坏点 ${r["坏点"]||0} · 溢出 ${r["溢出"]||0} · 驳回 ${r["驳回"]||0}`;
 }
 export function summarizeClose(r) {
   if (!r) return "";
@@ -73,10 +73,10 @@ export function boneDiffersFromTide() {
 }
 
 export function rulesFields() {
-  return ["当前栏号", "PM25上限", "PM25下限", "标定偏移上限", "栏策略"];
+  return ["当前栏号", "PM25上限", "PM25下限", "标定偏移上限", "入栏容限", "栏策略"];
 }
 export function rulesHint() {
-  return "改门槛会影响后续装载分流；已在栏缓冲不会被回溯改写。";
+  return "改门槛/容限只影响后续装载；设正数入栏容限后超容点切流进只读溢出归档，不回刷现行。";
 }
 export function validateLocalPatch(body) {
   const lo = Number(body && body["PM25下限"]);

@@ -52,6 +52,18 @@ CREATE TABLE IF NOT EXISTS 坏点匣 (
   观测时 TEXT NOT NULL,
   入匣时 TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS 溢出归档 (
+  报文编号 TEXT PRIMARY KEY,
+  站点键 TEXT NOT NULL,
+  指标键 TEXT NOT NULL,
+  读数 REAL NOT NULL,
+  观测时 TEXT NOT NULL,
+  栏号 TEXT NOT NULL,
+  原因 TEXT NOT NULL,
+  指纹 TEXT NOT NULL,
+  批次编号 TEXT NOT NULL DEFAULT '',
+  归档时 TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS 栏贯验 (
   编号 INTEGER PRIMARY KEY AUTOINCREMENT,
   时刻 TEXT NOT NULL,
@@ -86,6 +98,7 @@ def 此刻() -> str:
 def 初始化库() -> None:
     conn = 连接()
     conn.executescript(建表)
+    _迁移(conn)
     if conn.execute("SELECT COUNT(*) AS c FROM 栏规").fetchone()["c"] == 0:
         for k, v in {
             "当前栏号": "B-demo",
@@ -109,3 +122,10 @@ def 初始化库() -> None:
             )
     conn.commit()
     conn.close()
+
+
+def _迁移(conn) -> None:
+    """老库轻量补列：栏贯验增加溢出数口径。"""
+    列 = {r["name"] for r in conn.execute("PRAGMA table_info(栏贯验)").fetchall()}
+    if "溢出数" not in 列:
+        conn.execute("ALTER TABLE 栏贯验 ADD COLUMN 溢出数 INTEGER NOT NULL DEFAULT 0")

@@ -33,7 +33,7 @@ function 安全文本(s) {
 }
 function 命运色(f) {
   if (["已入栏", "在栏", "已汇总", "对齐"].includes(f)) return "ok";
-  if (["已坏点", "撕裂"].includes(f)) return "warn";
+  if (["已坏点", "已溢出", "撕裂"].includes(f)) return "warn";
   return "";
 }
 function 渲染水位(el, o) {
@@ -44,6 +44,46 @@ function 渲染水位(el, o) {
     d.className = "水卡";
     d.innerHTML = `<div class="数">${o[键] ?? 0}</div><div class="标">${标}</div>`;
     el.appendChild(d);
+  }
+}
+async function 渲染溢出条(el) {
+  if (!el) return;
+  let v;
+  try { v = await getJSON("/api/溢出裁决"); }
+  catch (e) { el.innerHTML = ""; return; }
+  const 对账 = v.对账 || {};
+  const 态 = v.启用
+    ? `<span class="徽章 好">${安全文本(v.形态)}</span>`
+    : `<span class="徽章">未启用（未设入栏容限）</span>`;
+  const 票 = 对账.是否对齐
+    ? `<span class="徽章 好">水位同票对齐</span>`
+    : `<span class="徽章 危">水位撕裂</span>`;
+  el.innerHTML = `
+    <div class="溢出条">
+      <div class="溢出头"><b class="铜字">${安全文本(v.策略名)}</b> ${态} ${票}</div>
+      <div class="说明 上距8">
+        栏 ${安全文本(v.当前栏号)} · 容限 ${v.容限 ?? "—"} ·
+        本栏在栏 ${安全文本(v.水位 && v.水位.本栏在栏)} / ${v.容限 ?? "∞"} ·
+        旁路溢出 ${安全文本(v.水位 && v.水位.溢出)} 条（只读归档，钉指纹，不回刷）
+      </div>
+      <div class="说明 上距8">
+        同票对账：入流 ${对账.入流 ?? 0} = 在栏 ${对账.在栏 ?? 0} +
+        已汇总 ${对账.已汇总 ?? 0} + 坏点 ${对账.坏点 ?? 0} + 溢出 ${对账.溢出 ?? 0}
+      </div>
+      <div class="说明 上距8">${安全文本(v.可点下一步 || "")}</div>
+    </div>`;
+}
+async function 渲染溢出归档表(el, 空文) {
+  if (!el) return;
+  let rows = [];
+  try { rows = await getJSON("/api/溢出归档"); } catch (e) {}
+  el.innerHTML = "";
+  if (!rows.length) {
+    el.innerHTML = `<tr><td colspan="7">${空态(空文 || "溢出归档为空。设置入栏容限后超容点才会切流到此。")}</td></tr>`;
+    return;
+  }
+  for (const r of rows) {
+    el.appendChild(行(`<td>${安全文本(r.报文编号)}</td><td>${安全文本(r.站点键)}</td><td>${安全文本(r.指标键)}</td><td>${r.读数}</td><td>${安全文本(r.观测时)}</td><td><span class="徽章 警">${安全文本(r.原因)}</span></td><td><code>${安全文本(r.指纹)}</code></td>`));
   }
 }
 function 渲染门槛(el, 规) {
@@ -88,6 +128,6 @@ function 填命运字典(el, dict) {
 }
 window.探栏 = {
   getJSON, postJSON, 行, 徽章, 空态, 安全文本, 命运色,
-  渲染水位, 渲染门槛, 渲染批次表,
+  渲染水位, 渲染门槛, 渲染批次表, 渲染溢出条, 渲染溢出归档表,
   装载摘要文, 结栏摘要文, 贯验摘要文, 填命运字典,
 };

@@ -40,6 +40,11 @@
       <pre class="回执" id="回执">操作回执会显示在这里</pre>
     </section>
     <section class="卷">
+      <h2>入栏溢出策略 · 旁路卡片</h2>
+      <div id="溢出条" class="下距12"></div>
+      <div class="横排 下距12" id="溢出卡"></div>
+    </section>
+    <section class="卷">
       <h2>最近装载批次</h2>
       <div class="表绕"><table><thead><tr><th>编号</th><th>时刻</th><th>入流</th><th>入栏</th><th>坏点</th></tr></thead><tbody id="装载批次表"></tbody></table></div>
     </section>
@@ -56,6 +61,14 @@
       const o = await 探栏.getJSON("/api/概览");
       探栏.渲染水位(document.getElementById("水位"), o);
       探栏.渲染门槛(document.getElementById("门槛条"), o.栏规 || {});
+      const v = await 探栏.getJSON("/api/溢出裁决");
+      const 卡 = document.getElementById("溢出卡");
+      卡.innerHTML = [
+        ["容限", v.容限 ?? "∞（未设）"],
+        ["本栏在栏", v.水位.本栏在栏],
+        ["旁路溢出", v.水位.溢出],
+        ["同票对账", v.对账.是否对齐 ? "对齐" : "撕裂"],
+      ].map(([标, 值]) => `<div class="水卡"><div class="数">${探栏.安全文本(值)}</div><div class="标">${标}</div></div>`).join("");
       const loads = await 探栏.getJSON("/api/装载批次");
       探栏.渲染批次表(document.getElementById("装载批次表"), loads, ["编号","时刻","入流","入栏","坏点"]);
       const closes = await 探栏.getJSON("/api/结栏批次");
@@ -72,6 +85,7 @@
     document.getElementById("灌坏点").onclick = () => 跑(() => 探栏.postJSON("/api/观测报文/夹具/坏点样例"));
     document.getElementById("结栏").onclick = () => 跑(() => 探栏.postJSON("/api/结栏/跑"));
     document.getElementById("贯验").onclick = () => 跑(() => 探栏.postJSON("/api/栏贯验/跑"));
+    探栏.渲染溢出条(document.getElementById("溢出条"));
     刷新();
     </script>
 

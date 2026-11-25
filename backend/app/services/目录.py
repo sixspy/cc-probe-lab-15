@@ -19,6 +19,10 @@ def 改栏规(体: dict) -> dict:
     conn = 连接()
     try:
         for k, v in (体 or {}).items():
+            if v == "":
+                # 显式清空：删除栏规键（如清空入栏容限即停用溢出策略）
+                conn.execute("DELETE FROM 栏规 WHERE 键=?", (str(k),))
+                continue
             conn.execute(
                 "INSERT INTO 栏规(键,值) VALUES (?,?) ON CONFLICT(键) DO UPDATE SET 值=excluded.值",
                 (str(k), str(v)),
@@ -112,6 +116,7 @@ def 概览() -> dict:
             "在栏": conn.execute("SELECT COUNT(*) AS c FROM 入栏缓冲 WHERE 命运='在栏'").fetchone()["c"],
             "站点汇总": conn.execute("SELECT COUNT(*) AS c FROM 站点汇总账").fetchone()["c"],
             "坏点": conn.execute("SELECT COUNT(*) AS c FROM 坏点匣").fetchone()["c"],
+            "溢出": conn.execute("SELECT COUNT(*) AS c FROM 溢出归档").fetchone()["c"],
             "栏规": 栏规(),
         }
     finally:
